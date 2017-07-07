@@ -18,7 +18,13 @@
 
 """Numerically simulate time evolution of an open quantum system."""
 
-import numpy as np
+import argparse          as ap
+import matplotlib        as mpl
+
+mpl.use("pdf")
+
+import matplotlib.pyplot as plt
+import numpy             as np
 
 def normalize(arr):
     """Normalize an array.
@@ -27,6 +33,17 @@ def normalize(arr):
     arr: numpy array to be normalized.
     """
     arr /= np.linalg.norm(arr)
+
+parser = ap.ArgumentParser(
+    description=globals()["__doc__"],
+    formatter_class=ap.ArgumentDefaultsHelpFormatter
+)
+
+parser.add_argument(
+    "-o", "--out-file", default="belavkin.pdf", help="Output file name."
+)
+
+options = parser.parse_args()
     
 N_POSITION_STEPS = 100
 N_TIME_STEPS     = 100
@@ -53,8 +70,12 @@ for t in range(0, N_TIME_STEPS - 1):
         1.0 + POSITION * (
             np.random.normal(size=N_POSITION_STEPS) - HALF_POSITION
         )
-    ) + MASS_FACTOR * (shifted_left - shifted_right)
+    ) + MASS_FACTOR * (shifted_left - 2.0 * wave_function[t] + shifted_right)
 
     normalize(wave_function[t_next])
     
-print(wave_function)
+plt.imshow(abs(wave_function), vmin=0.0, vmax=1.0, origin="lower")
+plt.xlabel("Position")
+plt.ylabel("Time")
+plt.colorbar().set_label("Probability")
+plt.savefig(options.out_file)
